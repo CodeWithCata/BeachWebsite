@@ -1,0 +1,2976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CÔTE</title>
+<link rel="icon" type="image/x-icon" href="logo.png">
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+
+<!-- GSAP -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
+
+<style>
+/* ═══════════════════════════════════════════════════
+   CSS CUSTOM PROPERTIES
+═══════════════════════════════════════════════════ */
+:root {
+  --gold:       #C9A84C;
+  --gold-light: #E8D5A3;
+  --teal:       #0D4F5C;
+  --teal-deep:  #061F26;
+  --salt:       #F5F0E8;
+  --fog:        rgba(245,240,232,0.06);
+  --glass:      rgba(13,79,92,0.18);
+  --font-display: 'Cormorant Garamond', serif;
+  --font-ui:      'Syne', sans-serif;
+  --font-mono:    'DM Mono', monospace;
+}
+
+/* ═══════════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: auto; overflow-x: hidden; }
+
+body {
+  background: #020d10;
+  color: var(--salt);
+  font-family: var(--font-display);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════════════
+   LOADING SCREEN  — beachy atmospheric
+═══════════════════════════════════════════════════ */
+#loader {
+  position: fixed;
+  inset: 0;
+  z-index: 8000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 14vh;
+  overflow: hidden;
+  /* warm horizon gradient: deep ocean → sky → sandy haze */
+  background: linear-gradient(
+    180deg,
+    #03181f 0%,
+    #0a3d52 28%,
+    #1a7a8a 52%,
+    #4db8c8 66%,
+    #a8dde5 76%,
+    #f0d9b0 88%,
+    #e8c97a 100%
+  );
+}
+
+/* Animated sun on the horizon */
+#loader-sun {
+  position: absolute;
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%,
+    #fff8e1 0%, #ffd54f 35%, #ffab00 65%, rgba(255,100,0,0) 100%);
+  box-shadow:
+    0 0 60px 30px rgba(255,200,60,0.35),
+    0 0 120px 60px rgba(255,160,0,0.18);
+  /* sits right on the horizon line */
+  bottom: 38vh;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: sun-pulse 3s ease-in-out infinite;
+}
+@keyframes sun-pulse {
+  0%,100% { box-shadow: 0 0 60px 30px rgba(255,200,60,0.35), 0 0 120px 60px rgba(255,160,0,0.18); }
+  50%      { box-shadow: 0 0 80px 40px rgba(255,210,80,0.50), 0 0 160px 80px rgba(255,170,0,0.26); }
+}
+
+/* Shimmer reflection beneath sun */
+#loader-shimmer {
+  position: absolute;
+  bottom: 28vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 9vh;
+  background: linear-gradient(to bottom,
+    rgba(255,220,100,0.55) 0%,
+    rgba(255,200,80,0.18) 60%,
+    transparent 100%);
+  filter: blur(6px);
+  animation: shimmer-flicker 2.2s ease-in-out infinite alternate;
+}
+@keyframes shimmer-flicker {
+  0%   { opacity: 0.6; width: 55px; }
+  50%  { opacity: 1.0; width: 72px; }
+  100% { opacity: 0.7; width: 58px; }
+}
+
+/* Ocean — three layered wave bands */
+#loader-ocean {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 30vh;
+  overflow: hidden;
+}
+.wave {
+  position: absolute;
+  left: -60%;
+  width: 220%;
+  border-radius: 40%;
+  opacity: 0.7;
+}
+.wave-1 {
+  height: 100%;
+  bottom: -8%;
+  background: linear-gradient(180deg, #0a4a5e 0%, #062030 100%);
+  animation: wave-roll 6s linear infinite;
+}
+.wave-2 {
+  height: 88%;
+  bottom: -12%;
+  background: linear-gradient(180deg, #0d6278 0%, #093040 100%);
+  opacity: 0.55;
+  animation: wave-roll 9s linear infinite reverse;
+}
+.wave-3 {
+  height: 72%;
+  bottom: -16%;
+  background: linear-gradient(180deg, #1a8fa8 0%, #0b4055 100%);
+  opacity: 0.4;
+  animation: wave-roll 12s linear infinite;
+}
+/* Foam crest on top wave */
+.wave-1::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 6px;
+  background: rgba(255,255,255,0.18);
+  filter: blur(2px);
+  border-radius: 50%;
+}
+@keyframes wave-roll {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Sand strip at very bottom */
+#loader-sand {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 7vh;
+  background: linear-gradient(180deg, #c8a96e 0%, #b8924a 100%);
+  /* subtle texture via repeating gradient */
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 3px,
+      rgba(255,255,255,0.04) 3px,
+      rgba(255,255,255,0.04) 6px
+    ),
+    linear-gradient(180deg, #c8a96e 0%, #b8924a 100%);
+}
+
+/* Floating seagull dots */
+#loader-birds {
+  position: absolute;
+  top: 22%;
+  left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+}
+.bird {
+  width: 14px; height: 4px;
+  border-top: 2px solid rgba(255,255,255,0.55);
+  border-radius: 50% 50% 0 0;
+  border-left: 0;
+  border-right: 0;
+  position: relative;
+  animation: bird-flap 2.4s ease-in-out infinite;
+}
+.bird::before {
+  content: '';
+  position: absolute;
+  top: -2px; left: 7px;
+  width: 7px; height: 4px;
+  border-top: 2px solid rgba(255,255,255,0.55);
+  border-radius: 50% 50% 0 0;
+}
+.bird:nth-child(2) { transform: scale(0.7); animation-delay: 0.4s; margin-top: 8px; }
+.bird:nth-child(3) { transform: scale(0.55); animation-delay: 0.9s; margin-top: 3px; }
+@keyframes bird-flap {
+  0%,100% { transform: scaleY(1); }
+  50%      { transform: scaleY(-0.5); }
+}
+.bird:nth-child(2) { animation-name: bird-flap2; }
+@keyframes bird-flap2 {
+  0%,100% { transform: scale(0.7) scaleY(1); }
+  50%      { transform: scale(0.7) scaleY(-0.5); }
+}
+.bird:nth-child(3) { animation-name: bird-flap3; }
+@keyframes bird-flap3 {
+  0%,100% { transform: scale(0.55) scaleY(1); }
+  50%      { transform: scale(0.55) scaleY(-0.5); }
+}
+
+/* UI text layer */
+#loader-ui {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+#loader-wordmark {
+  font-family: var(--font-display);
+  font-size: clamp(52px, 10vw, 108px);
+  font-weight: 300;
+  letter-spacing: 0.35em;
+  /* warm sandy white that pops against the ocean */
+  color: #fdf6e3;
+  text-shadow:
+    0 2px 40px rgba(255,200,80,0.4),
+    0 0 80px rgba(255,220,120,0.2);
+  opacity: 0;
+  text-transform: uppercase;
+}
+#loader-sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  color: rgba(253,246,227,0.65);
+  text-transform: uppercase;
+  opacity: 0;
+  text-shadow: 0 1px 12px rgba(0,0,0,0.4);
+}
+#loader-bar-wrap {
+  width: 64px;
+  height: 64px;
+  position: relative;
+  opacity: 0;
+  flex-shrink: 0;
+}
+/* The SVG sun sits inside the wrap — JS updates arc progress via stroke-dashoffset */
+#loader-sun-svg {
+  width: 64px; height: 64px;
+  overflow: visible;
+}
+/* Progress ring behind the beams */
+#loader-arc-track {
+  fill: none;
+  stroke: rgba(253,246,227,0.08);
+  stroke-width: 1;
+}
+#loader-arc-fill {
+  fill: none;
+  stroke: rgba(255,255,255,0.7);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 175.9;
+  stroke-dashoffset: 175.9;
+  transition: stroke-dashoffset 0.05s linear;
+  transform: rotate(-90deg);
+  transform-origin: 32px 32px;
+}
+/* Beam lines — animated via CSS keyframes */
+.lbeam {
+  stroke: rgba(255,255,255,0.0);
+  stroke-linecap: round;
+  fill: none;
+  transform-origin: 32px 32px;
+}
+.lbeam.active { animation: beam-pulse 3.5s ease-in-out infinite; }
+.lbeam:nth-child(1)  { animation-delay: 0s; }
+.lbeam:nth-child(2)  { animation-delay: 0.3s; }
+.lbeam:nth-child(3)  { animation-delay: 0.6s; }
+.lbeam:nth-child(4)  { animation-delay: 0.9s; }
+.lbeam:nth-child(5)  { animation-delay: 1.2s; }
+.lbeam:nth-child(6)  { animation-delay: 1.5s; }
+.lbeam:nth-child(7)  { animation-delay: 1.8s; }
+.lbeam:nth-child(8)  { animation-delay: 2.1s; }
+@keyframes beam-pulse {
+  0%,100% { stroke: rgba(255,255,255,0.0);   stroke-width: 1; }
+  35%      { stroke: rgba(255,255,255,0.92);  stroke-width: 2.5; }
+  65%      { stroke: rgba(255,255,255,0.28);  stroke-width: 1.2; }
+}
+#loader-percent {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: rgba(253,246,227,0.45);
+  text-shadow: 0 1px 8px rgba(0,0,0,0.3);
+  opacity: 0;
+}
+
+/* ═══════════════════════════════════════════════════
+   SVG FILTERS (Color grade + Grain)
+═══════════════════════════════════════════════════ */
+#svg-filters { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* ═══════════════════════════════════════════════════
+   GRAIN OVERLAY
+═══════════════════════════════════════════════════ */
+#grain {
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  pointer-events: none;
+  z-index: 7000;
+  opacity: 0.032;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  animation: grain-drift 0.8s steps(1) infinite;
+  mix-blend-mode: overlay;
+}
+@keyframes grain-drift {
+  0%   { transform: translate(0,0); }
+  10%  { transform: translate(-2%,-3%); }
+  20%  { transform: translate(3%,2%); }
+  30%  { transform: translate(-1%,4%); }
+  40%  { transform: translate(4%,-1%); }
+  50%  { transform: translate(-3%,3%); }
+  60%  { transform: translate(2%,-4%); }
+  70%  { transform: translate(-4%,1%); }
+  80%  { transform: translate(3%,3%); }
+  90%  { transform: translate(-2%,2%); }
+  100% { transform: translate(1%,-2%); }
+}
+
+/* ═══════════════════════════════════════════════════
+   MAIN WRAPPER
+═══════════════════════════════════════════════════ */
+#app {
+  opacity: 0;
+  position: relative;
+}
+
+/* ═══════════════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════════════ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 500;
+  padding: 28px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  mix-blend-mode: normal;
+}
+nav::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(2,13,16,0.7) 0%, transparent 100%);
+  pointer-events: none;
+}
+.nav-logo {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--salt);
+  position: relative;
+  z-index: 1;
+  text-decoration: none;
+}
+.nav-logo span { color: var(--gold); }
+.nav-links {
+  display: flex;
+  gap: 40px;
+  position: relative;
+  z-index: 1;
+}
+.nav-links a {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.6);
+  text-decoration: none;
+  transition: color 0.3s;
+  position: relative;
+}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0;
+  width: 0; height: 1px;
+  background: var(--gold);
+  transition: width 0.4s cubic-bezier(.23,1,.32,1);
+}
+.nav-links a:hover { color: var(--gold); }
+.nav-links a:hover::after { width: 100%; }
+.nav-cta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid rgba(201,168,76,0.4);
+  padding: 10px 22px;
+  position: relative;
+  z-index: 1;
+  transition: background 0.3s, border-color 0.3s;
+  text-decoration: none;
+}
+.nav-cta:hover {
+  background: rgba(201,168,76,0.1);
+  border-color: var(--gold);
+}
+
+/* ═══════════════════════════════════════════════════
+   HERO SECTION  (scroll-scrub pin container)
+═══════════════════════════════════════════════════ */
+#hero-pin {
+  height: 130vh;
+  position: relative;
+}
+#hero-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Video */
+#hero-video-wrap {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+#hero-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  will-change: transform;
+  filter: url(#cinematic-grade);
+}
+
+/* Vignette */
+#hero-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 80% at 50% 50%, transparent 30%, rgba(2,13,16,0.65) 100%),
+    linear-gradient(to bottom, rgba(2,13,16,0.5) 0%, transparent 25%, transparent 70%, rgba(2,13,16,0.9) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Spotlight mask */
+#hero-spotlight {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 55% 65% at 50% 48%, transparent 0%, rgba(2,13,16,0.3) 100%);
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+}
+
+/* Scan line */
+#hero-scan {
+  position: absolute;
+  left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparent);
+  top: 50%;
+  z-index: 10;
+  opacity: 0;
+  will-change: transform;
+}
+
+/* Hero content */
+#hero-content {
+  position: relative;
+  z-index: 20;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  will-change: transform, opacity;
+}
+
+.hero-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.45em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 24px;
+  opacity: 0;
+  transform: translateY(20px);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.hero-eyebrow::before,
+.hero-eyebrow::after {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.5;
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(64px, 10vw, 160px);
+  font-weight: 300;
+  line-height: 0.9;
+  letter-spacing: -0.01em;
+  color: var(--salt);
+  text-transform: uppercase;
+  overflow: hidden;
+}
+.hero-title .line {
+  display: block;
+  overflow: hidden;
+}
+.hero-title .line-inner {
+  display: block;
+  transform: translateY(110%);
+  will-change: transform;
+}
+.hero-title em {
+  font-style: italic;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(245,240,232,0.7);
+  padding-right: 8px;
+}
+
+.hero-sub {
+  font-family: var(--font-display);
+  font-size: clamp(13px, 1.4vw, 18px);
+  font-weight: 300;
+  font-style: italic;
+  letter-spacing: 0.08em;
+  color: rgba(245,240,232,0.55);
+  margin-top: 32px;
+  opacity: 0;
+  transform: translateY(24px);
+  max-width: 440px;
+  line-height: 1.7;
+}
+
+/* Scroll indicator */
+#scroll-hint {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+}
+#scroll-hint span {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.4);
+}
+.scroll-line {
+  width: 1px;
+  height: 50px;
+  background: linear-gradient(to bottom, var(--gold) 0%, transparent 100%);
+  animation: scroll-line-pulse 2s ease-in-out infinite;
+}
+@keyframes scroll-line-pulse {
+  0%, 100% { opacity: 0.3; transform: scaleY(1); }
+  50%       { opacity: 1;   transform: scaleY(0.6) translateY(10px); }
+}
+
+/* Floating data tags */
+.data-tag {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 20;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.data-tag .dt-label {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.7;
+}
+.data-tag .dt-value {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--salt);
+  line-height: 1;
+}
+.data-tag .dt-unit {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: rgba(245,240,232,0.4);
+  letter-spacing: 0.1em;
+}
+#tag-left  { left: 8%; bottom: 22%; }
+#tag-right { right: 8%; top: 28%; }
+
+/* Corner decorators */
+.corner {
+  position: absolute;
+  width: 28px; height: 28px;
+  z-index: 20;
+  opacity: 0;
+}
+.corner::before, .corner::after {
+  content: '';
+  position: absolute;
+  background: var(--gold);
+  opacity: 0.6;
+}
+.corner::before { width: 1px; height: 100%; }
+.corner::after  { width: 100%; height: 1px; }
+.corner-tl { top: 32px; left: 40px; }
+.corner-tr { top: 32px; right: 40px; transform: scaleX(-1); }
+.corner-bl { bottom: 32px; left: 40px; transform: scaleY(-1); }
+.corner-br { bottom: 32px; right: 40px; transform: scale(-1); }
+
+/* ═══════════════════════════════════════════════════
+   VIDEO CONTEXT OVERLAY (phase changes)
+═══════════════════════════════════════════════════ */
+#phase-label {
+  position: absolute;
+  right: 48px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  writing-mode: vertical-rl;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(201,168,76,0.5);
+  opacity: 0;
+  transition: opacity 0.6s, color 0.6s;
+}
+
+/* ═══════════════════════════════════════════════════
+   CHAPTER 2 — EDITORIAL IMAGE + TEXT
+═══════════════════════════════════════════════════ */
+#chapter-2 {
+  position: relative;
+  background: #020d10;
+  overflow: hidden;
+  padding: 0;
+}
+
+/* Top split: image left, text right */
+.ch2-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 92vh;
+}
+
+/* Left: full-bleed editorial image */
+.ch2-img-col {
+  position: relative;
+  overflow: hidden;
+}
+.ch2-img-col img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.82) brightness(0.78);
+  transition: transform 1.2s cubic-bezier(.23,1,.32,1), filter 0.8s;
+  will-change: transform;
+}
+.ch2-img-col:hover img {
+  transform: scale(1.04);
+  filter: saturate(1) brightness(0.88);
+}
+/* Gold line accent on right edge of image */
+.ch2-img-col::after {
+  content: '';
+  position: absolute;
+  top: 10%; bottom: 10%;
+  right: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(201,168,76,0.5) 30%, rgba(201,168,76,0.5) 70%, transparent);
+}
+/* Subtle bottom gradient on image */
+.ch2-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(2,13,16,0.3) 0%, transparent 60%),
+              linear-gradient(to top, rgba(2,13,16,0.5) 0%, transparent 40%);
+  pointer-events: none;
+}
+/* Small caption bottom-left of image */
+.ch2-img-caption {
+  position: absolute;
+  bottom: 32px;
+  left: 32px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.4);
+  z-index: 2;
+}
+
+/* Right: text column */
+.ch2-text-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px 72px 80px 64px;
+  background: #020d10;
+  position: relative;
+}
+.ch2-text-col::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 90% 70% at 80% 30%, rgba(13,79,92,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Label */
+.chapter-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  transform: translateX(-20px);
+}
+.chapter-label::before {
+  content: '';
+  width: 24px; height: 1px;
+  background: var(--gold);
+}
+
+/* Heading — word-by-word clip reveal */
+.chapter-heading {
+  font-family: var(--font-display);
+  font-size: clamp(38px, 4.2vw, 68px);
+  font-weight: 300;
+  line-height: 1.08;
+  color: var(--salt);
+  margin-bottom: 36px;
+  overflow: hidden;
+}
+.chapter-heading em {
+  font-style: italic;
+  color: var(--gold-light);
+}
+/* Each .word wrapper clips its inner span */
+.ch2-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  margin-right: 0.22em;
+}
+.ch2-word-inner {
+  display: inline-block;
+  transform: translateY(105%);
+  will-change: transform;
+}
+
+/* Body text — line-by-line reveal */
+.chapter-body {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 300;
+  line-height: 1.9;
+  color: rgba(245,240,232,0.52);
+  margin-bottom: 44px;
+  overflow: hidden;
+}
+.ch2-line {
+  display: block;
+  overflow: hidden;
+}
+.ch2-line-inner {
+  display: block;
+  transform: translateY(100%);
+  will-change: transform;
+}
+
+.glass-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 34px;
+  background: rgba(201,168,76,0.08);
+  border: 1px solid rgba(201,168,76,0.35);
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.4s, border-color 0.4s;
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  position: relative;
+  overflow: hidden;
+  align-self: flex-start;
+}
+.glass-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 0%, rgba(201,168,76,0.12) 50%, transparent 100%);
+  transform: translateX(-100%);
+  transition: transform 0.6s cubic-bezier(.23,1,.32,1);
+}
+.glass-btn:hover::before { transform: translateX(100%); }
+.glass-btn:hover { background: rgba(201,168,76,0.14); border-color: var(--gold); }
+.glass-btn .btn-arrow {
+  width: 16px; height: 1px;
+  background: var(--gold);
+  position: relative;
+  transition: width 0.3s;
+}
+.glass-btn .btn-arrow::after {
+  content: '';
+  position: absolute;
+  right: 0; top: -3px;
+  width: 6px; height: 6px;
+  border-right: 1px solid var(--gold);
+  border-top: 1px solid var(--gold);
+  transform: rotate(45deg);
+}
+.glass-btn:hover .btn-arrow { width: 28px; }
+
+/* Bottom: three horizontal experience strips */
+.ch2-strips {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid rgba(245,240,232,0.06);
+}
+.ch2-strip {
+  position: relative;
+  overflow: hidden;
+  height: 340px;
+  border-right: 1px solid rgba(245,240,232,0.06);
+  opacity: 0;
+  transform: translateY(40px);
+}
+.ch2-strip:last-child { border-right: none; }
+.ch2-strip-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: saturate(0.75) brightness(0.65);
+  transition: transform 0.9s cubic-bezier(.23,1,.32,1), filter 0.7s;
+  will-change: transform;
+}
+.ch2-strip:hover .ch2-strip-img {
+  transform: scale(1.07);
+  filter: saturate(1.05) brightness(0.85);
+}
+.ch2-strip-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(2,13,16,0.92) 0%, rgba(2,13,16,0.2) 55%, transparent 100%);
+}
+.ch2-strip-content {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 28px 32px;
+  transform: translateY(6px);
+  transition: transform 0.5s cubic-bezier(.23,1,.32,1);
+}
+.ch2-strip:hover .ch2-strip-content { transform: translateY(0); }
+.ch2-strip-num {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  opacity: 0.7;
+  margin-bottom: 10px;
+}
+.ch2-strip-title {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 1.8vw, 26px);
+  font-weight: 300;
+  color: var(--salt);
+  line-height: 1.15;
+  margin-bottom: 8px;
+}
+.ch2-strip-desc {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.65;
+  color: rgba(245,240,232,0.42);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.4s 0.08s, transform 0.4s 0.08s;
+}
+.ch2-strip:hover .ch2-strip-desc { opacity: 1; transform: translateY(0); }
+
+/* Gold hover line at top of each strip */
+.ch2-strip::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.6), transparent);
+  z-index: 2;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.5s cubic-bezier(.23,1,.32,1);
+}
+.ch2-strip:hover::before { transform: scaleX(1); }
+
+/* Card icon (keep existing .card-icon rules but scope to strips) */
+.ch2-strip .card-icon {
+  margin-bottom: 10px;
+  display: flex;
+}
+
+@media (max-width: 768px) {
+  .ch2-split { grid-template-columns: 1fr; }
+  .ch2-img-col { height: 55vw; position: relative; }
+  .ch2-text-col { padding: 48px 24px; }
+  .ch2-strips { grid-template-columns: 1fr; }
+  .ch2-strip { height: 260px; border-right: none; border-bottom: 1px solid rgba(245,240,232,0.06); }
+}
+
+/* ═══════════════════════════════════════════════════
+   CHAPTER 3 — PARALLAX STATS BAND
+═══════════════════════════════════════════════════ */
+#chapter-3 {
+  position: relative;
+  padding: 160px 48px;
+  background: #020d10;
+  overflow: hidden;
+  text-align: center;
+}
+#chapter-3::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(13,79,92,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 2px;
+  max-width: 900px;
+  margin: 0 auto 100px;
+  border: 1px solid rgba(245,240,232,0.06);
+}
+.stat-cell {
+  padding: 60px 40px;
+  border: 1px solid rgba(245,240,232,0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(50px);
+  position: relative;
+  overflow: hidden;
+}
+.stat-cell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(13,79,92,0.08) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.stat-cell:hover::after { opacity: 1; }
+.stat-num {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 5vw, 80px);
+  font-weight: 300;
+  color: var(--salt);
+  line-height: 1;
+}
+.stat-num em {
+  font-style: normal;
+  color: var(--gold);
+}
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.35);
+}
+
+/* Manifesto */
+.manifesto {
+  max-width: 700px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+.manifesto-quote {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3vw, 44px);
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--salt);
+  margin-bottom: 24px;
+}
+.manifesto-quote em {
+  color: var(--gold-light);
+  font-style: normal;
+}
+.manifesto-attr {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.3);
+}
+/* Word clip wrappers for sand-reveal */
+.mword {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  margin-right: 0.22em;
+}
+.mword-inner {
+  display: inline-block;
+  transform: translateY(-120%) rotate(-6deg);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+/* Attr line clip */
+.mattr-wrap {
+  overflow: hidden;
+  display: block;
+}
+.mattr-inner {
+  display: block;
+  transform: translateY(100%);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+/* Sand canvas sits above section bg, below text */
+#sand-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════
+   CHAPTER 4 — TYPOGRAPHIC STATEMENT
+═══════════════════════════════════════════════════ */
+#chapter-4 {
+  position: relative;
+  padding: 90px 0 100px;
+  background: #061a22;
+  overflow: hidden;
+}
+/* Subtle ambient glow behind the text */
+#chapter-4::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 70vw; height: 70%;
+  background: radial-gradient(ellipse, rgba(13,79,92,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Each row is a flex line of characters/words */
+.ch4-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  line-height: 1;
+  padding: 0 40px;
+  position: relative;
+}
+
+/* Big display word — filled style */
+.ch4-word-filled {
+  font-family: var(--font-display);
+  font-size: clamp(42px, 6.5vw, 110px);
+  font-weight: 300;
+  text-transform: uppercase;
+  color: var(--salt);
+  letter-spacing: 0.04em;
+  display: inline-block;
+  will-change: transform, opacity;
+  line-height: 0.92;
+}
+/* Outlined / ghost style */
+.ch4-word-outline {
+  font-family: var(--font-display);
+  font-size: clamp(42px, 6.5vw, 110px);
+  font-weight: 300;
+  font-style: italic;
+  text-transform: uppercase;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(201,168,76,0.55);
+  letter-spacing: 0.04em;
+  display: inline-block;
+  will-change: transform, opacity;
+  line-height: 0.92;
+}
+/* Accent dot between words */
+.ch4-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0;
+  transform: scale(0.3);
+  margin: 0 clamp(16px, 2.5vw, 40px);
+  flex-shrink: 0;
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+/* Middle editorial divider row */
+.ch4-divider-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin: 20px 0;
+  overflow: hidden;
+}
+.ch4-rule {
+  height: 1px;
+  width: clamp(60px, 8vw, 140px);
+  background: linear-gradient(to right, transparent, rgba(201,168,76,0.45), transparent);
+  will-change: transform, opacity;
+}
+.ch4-tagline {
+  font-family: var(--font-mono);
+  font-size: clamp(9px, 1vw, 12px);
+  letter-spacing: 0.45em;
+  text-transform: uppercase;
+  color: rgba(201,168,76,0.6);
+  white-space: nowrap;
+  opacity: 0;
+  will-change: opacity;
+}
+
+/* Clip wrapper — hides character before reveal */
+.ch4-clip {
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: bottom;
+}
+.ch4-clip-inner {
+  display: inline-block;
+  transform: translateY(110%);
+  will-change: transform;
+}
+/* ═══════════════════════════════════════════════════
+   CHAPTER 5 — EXPERIENCE GRID  
+═══════════════════════════════════════════════════ */
+#chapter-5 {
+  padding: 120px 48px 160px;
+  background: #020d10;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.exp-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 64px;
+  opacity: 0;
+  transform: translateY(30px);
+}
+.exp-header h2 {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 4vw, 64px);
+  font-weight: 300;
+  line-height: 1.05;
+  color: var(--salt);
+}
+.exp-header h2 em { font-style: italic; color: var(--gold-light); }
+.exp-count {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.3);
+  padding-bottom: 6px;
+}
+.exp-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 2px;
+}
+.exp-card {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: unset;
+  min-height: 320px;
+  background: #061a22;
+  opacity: 0;
+  transform: scale(0.96);
+}
+.exp-card:first-child {
+  grid-row: 1 / 3;
+  min-height: 640px;
+}
+.exp-card-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: saturate(0.8) brightness(0.7);
+  transition: transform 0.8s cubic-bezier(.23,1,.32,1), filter 0.8s;
+  will-change: transform;
+}
+.exp-card:hover .exp-card-bg {
+  transform: scale(1.06);
+  filter: saturate(1.1) brightness(0.85);
+}
+.exp-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(2,13,16,0.85) 0%, transparent 60%);
+}
+.exp-card-content {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 32px;
+  transform: translateY(8px);
+  transition: transform 0.5s cubic-bezier(.23,1,.32,1);
+}
+.exp-card:hover .exp-card-content { transform: translateY(0); }
+.exp-card-tag {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.exp-card-title {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2vw, 28px);
+  font-weight: 300;
+  color: var(--salt);
+  line-height: 1.2;
+}
+.exp-card-reveal {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.4);
+  margin-top: 12px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.4s 0.1s, transform 0.4s 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.exp-card-reveal::after {
+  content: '';
+  width: 20px; height: 1px;
+  background: rgba(245,240,232,0.3);
+}
+.exp-card:hover .exp-card-reveal {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ═══════════════════════════════════════════════════
+   FOOTER CTA
+═══════════════════════════════════════════════════ */
+#footer-cta {
+  position: relative;
+  min-height: 100vh;
+  background: #020d10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  padding: 80px 48px;
+}
+#footer-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 70% at 50% 50%, rgba(13,79,92,0.2), transparent 70%);
+  pointer-events: none;
+}
+.cta-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 40px;
+  opacity: 0;
+  transform: translateY(20px);
+}
+.cta-title {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 8vw, 130px);
+  font-weight: 300;
+  line-height: 0.95;
+  text-transform: uppercase;
+  color: var(--salt);
+  margin-bottom: 48px;
+  opacity: 0;
+  transform: translateY(40px);
+}
+.cta-title em {
+  font-style: italic;
+  display: block;
+  color: var(--gold-light);
+}
+.cta-actions {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(24px);
+}
+.btn-primary {
+  padding: 18px 44px;
+  background: var(--gold);
+  color: #020d10;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.3s, transform 0.3s;
+  font-weight: 700;
+}
+.btn-primary:hover {
+  background: var(--gold-light);
+  transform: translateY(-2px);
+}
+.btn-ghost {
+  padding: 18px 44px;
+  background: transparent;
+  color: rgba(245,240,232,0.6);
+  border: 1px solid rgba(245,240,232,0.15);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: border-color 0.3s, color 0.3s;
+}
+.btn-ghost:hover {
+  border-color: rgba(245,240,232,0.4);
+  color: var(--salt);
+}
+
+/* Rotating ring */
+.cta-ring {
+  position: absolute;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  border: 1px solid rgba(201,168,76,0.07);
+  animation: ring-spin 30s linear infinite;
+  pointer-events: none;
+}
+.cta-ring:nth-child(2) {
+  width: 900px; height: 900px;
+  border-color: rgba(13,79,92,0.1);
+  animation-duration: 50s;
+  animation-direction: reverse;
+}
+@keyframes ring-spin { to { transform: rotate(360deg); } }
+
+footer {
+  padding: 48px;
+  border-top: 1px solid rgba(245,240,232,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #020d10;
+}
+.footer-logo {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 300;
+  letter-spacing: 0.4em;
+  color: var(--salt);
+  opacity: 0.4;
+  text-transform: uppercase;
+}
+.footer-copy {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: rgba(245,240,232,0.2);
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════════
+   HERO FLOATING SVG ICONS
+═══════════════════════════════════════════════════ */
+.hero-icon {
+  position: absolute;
+  z-index: 15;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+#hero-icon-shell {
+  bottom: 18%;
+  left: 12%;
+  animation: float-a 7s ease-in-out infinite;
+}
+#hero-icon-wave {
+  top: 30%;
+  right: 14%;
+  animation: float-b 9s ease-in-out infinite;
+}
+#hero-icon-compass {
+  top: 22%;
+  left: 18%;
+  animation: float-c 11s ease-in-out infinite;
+}
+@keyframes float-a {
+  0%,100% { transform: translateY(0px) rotate(-4deg); }
+  50%      { transform: translateY(-14px) rotate(4deg); }
+}
+@keyframes float-b {
+  0%,100% { transform: translateY(0px) rotate(3deg); }
+  50%      { transform: translateY(-18px) rotate(-3deg); }
+}
+@keyframes float-c {
+  0%,100% { transform: translateY(0px) rotate(0deg); }
+  33%      { transform: translateY(-10px) rotate(8deg); }
+  66%      { transform: translateY(-6px) rotate(-5deg); }
+}
+
+/* ═══════════════════════════════════════════════════
+   WAVE SVG DIVIDER
+═══════════════════════════════════════════════════ */
+.wave-divider {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+  pointer-events: none;
+}
+.wave-divider svg {
+  display: block;
+  width: 100%;
+}
+
+/* ═══════════════════════════════════════════════════
+   GLASS CARD ICONS
+═══════════════════════════════════════════════════ */
+.card-icon {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.card-icon svg {
+  opacity: 0.75;
+  transition: opacity 0.3s;
+}
+.glass-card:hover .card-icon svg { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════
+   PHOTO GALLERY SECTION
+═══════════════════════════════════════════════════ */
+#chapter-gallery {
+  padding: 0 48px 120px;
+  background: #020d10;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.gallery-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 48px;
+  opacity: 0;
+  transform: translateY(24px);
+}
+.gallery-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.gallery-rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, rgba(201,168,76,0.3), transparent);
+}
+.gallery-count {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: rgba(245,240,232,0.2);
+}
+/* Masonry-style asymmetric grid */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  grid-template-rows: 280px 220px;
+  gap: 3px;
+}
+.gallery-item {
+  position: relative;
+  overflow: hidden;
+  background: #061a22;
+  opacity: 0;
+  transform: translateY(30px);
+}
+.gallery-item:first-child {
+  grid-row: 1 / 3;
+}
+.gallery-item:nth-child(4) {
+  grid-column: 2 / 4;
+}
+.gallery-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: saturate(0.75) brightness(0.75);
+  transition: transform 1s cubic-bezier(.23,1,.32,1), filter 0.8s;
+  will-change: transform;
+}
+.gallery-item:hover .gallery-img {
+  transform: scale(1.07);
+  filter: saturate(1.05) brightness(0.9);
+}
+.gallery-caption {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 20px 24px;
+  background: linear-gradient(to top, rgba(2,13,16,0.8) 0%, transparent 100%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  transform: translateY(4px);
+  transition: transform 0.4s cubic-bezier(.23,1,.32,1);
+}
+.gallery-item:hover .gallery-caption { transform: translateY(0); }
+.gallery-caption-text {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 300;
+  font-style: italic;
+  color: rgba(245,240,232,0.7);
+}
+.gallery-caption-icon {
+  opacity: 0;
+  transition: opacity 0.3s 0.1s;
+}
+.gallery-item:hover .gallery-caption-icon { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════
+   AMENITIES ICON ROW  (between ch3 and ch4)
+═══════════════════════════════════════════════════ */
+#chapter-amenities {
+  padding: 80px 48px;
+  background: #061a22;
+  overflow: hidden;
+}
+.amenities-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+}
+.amenity-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 40px 20px;
+  border: 1px solid rgba(245,240,232,0.05);
+  position: relative;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: border-color 0.4s, background 0.4s;
+}
+.amenity-cell:hover {
+  border-color: rgba(201,168,76,0.15);
+  background: rgba(13,79,92,0.1);
+}
+.amenity-icon {
+  color: var(--gold);
+  transition: transform 0.4s cubic-bezier(.23,1,.32,1);
+}
+.amenity-cell:hover .amenity-icon { transform: translateY(-4px); }
+.amenity-name {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.4);
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════
+   HAMBURGER MENU (mobile)
+═══════════════════════════════════════════════════ */
+#nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 32px; height: 32px;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  background: none;
+  border: none;
+  padding: 0;
+}
+#nav-toggle span {
+  display: block;
+  height: 1px;
+  background: var(--salt);
+  transition: transform 0.4s cubic-bezier(.23,1,.32,1),
+              opacity   0.3s,
+              width     0.4s cubic-bezier(.23,1,.32,1);
+  transform-origin: left center;
+}
+#nav-toggle span:nth-child(1) { width: 24px; }
+#nav-toggle span:nth-child(2) { width: 16px; }
+#nav-toggle span:nth-child(3) { width: 20px; }
+
+/* Drawer overlay */
+#nav-drawer {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(2,13,16,0.97);
+  backdrop-filter: blur(20px);
+  z-index: 490;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+#nav-drawer.open {
+  opacity: 1;
+  pointer-events: all;
+}
+#nav-drawer a {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 8vw, 56px);
+  font-weight: 300;
+  color: var(--salt);
+  text-decoration: none;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: color 0.3s;
+  cursor: pointer;
+}
+#nav-drawer a:hover { color: var(--gold); }
+#nav-drawer .drawer-close {
+  position: absolute;
+  top: 28px; right: 28px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.4);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  /* Nav */
+  .nav-links { display: none; }
+  .nav-cta   { display: none; }
+  #nav-toggle { display: flex; }
+  #nav-drawer { display: flex; }
+  nav { padding: 20px 24px; }
+
+  /* Chapter 4 — stack rows vertically, smaller text */
+  .ch4-row {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0 16px;
+    gap: 4px;
+  }
+  .ch4-word-filled,
+  .ch4-word-outline {
+    font-size: clamp(28px, 9vw, 52px);
+    white-space: nowrap;
+  }
+  .ch4-dot { display: none; }
+  .ch4-divider-row { gap: 12px; padding: 0 16px; }
+  .ch4-tagline {
+    font-size: 8px;
+    letter-spacing: 0.25em;
+    white-space: normal;
+    text-align: center;
+  }
+  .ch4-rule { width: 30px; }
+  #chapter-4 { padding: 60px 0 70px; }
+
+  /* Other existing fixes */
+  .gallery-grid { grid-template-columns: 1fr 1fr; grid-template-rows: auto; }
+  .gallery-item:first-child { grid-row: auto; }
+  .gallery-item:nth-child(4) { grid-column: auto; }
+  .amenities-inner { grid-template-columns: repeat(3,1fr); }
+  #chapter-gallery { padding: 0 24px 80px; }
+  .chapter-inner { grid-template-columns: 1fr; gap: 48px; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .exp-grid { grid-template-columns: 1fr; }
+  .exp-card:first-child { grid-row: auto; min-height: 320px; }
+  #tag-left, #tag-right { display: none; }
+  .cta-actions { flex-direction: column; }
+}
+.chroma-target {
+  position: relative;
+  transition: text-shadow 0.3s;
+}
+.chroma-target:hover {
+  text-shadow:
+    -2px 0 rgba(255,30,30,0.25),
+     2px 0 rgba(30,180,255,0.25);
+}
+
+/* ═══════════════════════════════════════════════════
+   PROGRESS BAR
+═══════════════════════════════════════════════════ */
+#progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--teal), var(--gold));
+  z-index: 600;
+  width: 0%;
+  will-change: width;
+}
+
+/* ═══════════════════════════════════════════════════
+   UTILITY
+═══════════════════════════════════════════════════ */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  border: 0;
+}
+
+@media (max-width: 768px) {
+  .chapter-inner { grid-template-columns: 1fr; gap: 48px; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .exp-grid { grid-template-columns: 1fr; }
+  .exp-card:first-child { grid-row: auto; min-height: 320px; }
+  .nav-links { display: none; }
+  nav { padding: 20px 24px; }
+  #tag-left, #tag-right { display: none; }
+  .cta-actions { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- SVG Filters for cinematic color grade + chromatic aberration -->
+<svg id="svg-filters" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Cinematic grade: lift blacks, teal shadows, golden highlights -->
+    <filter id="cinematic-grade" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <!-- Slightly crush blacks & lift midtones -->
+      <feComponentTransfer>
+        <feFuncR type="table" tableValues="0.04 0.25 0.58 0.82 0.95"/>
+        <feFuncG type="table" tableValues="0.05 0.22 0.54 0.80 0.96"/>
+        <feFuncB type="table" tableValues="0.09 0.28 0.56 0.78 0.90"/>
+      </feComponentTransfer>
+      <!-- Slight saturation boost -->
+      <feColorMatrix type="saturate" values="1.25"/>
+    </filter>
+    <!-- Heavy aberration for loading flash -->
+    <filter id="aberration-flash">
+      <feOffset in="SourceGraphic" dx="-4" dy="0" result="r"/>
+      <feOffset in="SourceGraphic" dx="4"  dy="0" result="b"/>
+      <feBlend in="r" in2="SourceGraphic" mode="screen" result="rb"/>
+      <feBlend in="rb" in2="b" mode="screen"/>
+    </filter>
+  </defs>
+</svg>
+
+<!-- Grain -->
+<div id="grain" aria-hidden="true"></div>
+
+<!-- Progress bar -->
+<div id="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"></div>
+
+<!-- ─── LOADER ──────────────────────────────────────── -->
+<div id="loader" aria-label="Loading" role="status">
+  <!-- Atmospheric scene -->
+  <div id="loader-sun" aria-hidden="true"></div>
+  <div id="loader-shimmer" aria-hidden="true"></div>
+  <div id="loader-birds" aria-hidden="true">
+    <div class="bird"></div>
+    <div class="bird"></div>
+    <div class="bird"></div>
+  </div>
+  <div id="loader-ocean" aria-hidden="true">
+    <div class="wave wave-1"></div>
+    <div class="wave wave-2"></div>
+    <div class="wave wave-3"></div>
+  </div>
+  <div id="loader-sand" aria-hidden="true"></div>
+  <!-- UI text -->
+  <div id="loader-ui">
+    <div id="loader-wordmark">CÔTE</div>
+    <div id="loader-sub">Curating the horizon since 2024</div>
+    <div id="loader-bar-wrap">
+      <svg id="loader-sun-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="core-grad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="#fff8e1"/>
+            <stop offset="55%"  stop-color="#ffd54f"/>
+            <stop offset="100%" stop-color="#ffab00" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="beam-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#ffffff"/>
+            <stop offset="100%" stop-color="#f0f0f0"/>
+          </linearGradient>
+        </defs>
+        <!-- progress track -->
+        <circle id="loader-arc-track" cx="32" cy="32" r="28"/>
+        <circle id="loader-arc-fill"  cx="32" cy="32" r="28"/>
+        <!-- 8 light beams radiating outward from core past arc ring -->
+        <g id="beams">
+          <line class="lbeam" x1="32" y1="10" x2="32" y2="-4" stroke-width="2" transform="rotate(0,32,32)"/>
+          <line class="lbeam" x1="32" y1="10" x2="32" y2="-4" stroke-width="2" transform="rotate(45,32,32)"/>
+          <line class="lbeam" x1="32" y1="10" x2="32" y2="-4" stroke-width="2" transform="rotate(90,32,32)"/>
+          <line class="lbeam" x1="32" y1="10" x2="32" y2="-4" stroke-width="2" transform="rotate(135,32,32)"/>
+          <line class="lbeam" x1="32" y1="10" x2="32" y2="-4" stroke-width="2" transform="rotate(180,32,32)"/>
+          <line class="lbeam" x1="32" y1="10" x2="32" y2="-4" stroke-width="2" transform="rotate(225,32,32)"/>
+          <line class="lbeam" x1="32" y1="10" x2="32" y2="-4" stroke-width="2" transform="rotate(270,32,32)"/>
+          <line class="lbeam" x1="32" y1="10" x2="32" y2="-4" stroke-width="2" transform="rotate(315,32,32)"/>
+        </g>
+        <!-- glowing core -->
+        <circle cx="32" cy="32" r="7" fill="url(#core-grad)" opacity="0.9"/>
+        <circle cx="32" cy="32" r="4" fill="#fff8e1" opacity="0.95"/>
+      </svg>
+    </div>
+    <div id="loader-percent">0%</div>
+  </div>
+</div>
+
+<!-- ─── MAIN APP ────────────────────────────────────── -->
+<div id="app">
+
+  <!-- NAV -->
+  <nav aria-label="Primary navigation">
+    <a href="#" class="nav-logo chroma-target" id="nav-logo-link">C<span>Ô</span>TE</a>
+    <div class="nav-links">
+      <a href="#chapter-2" class="hover-target" data-cursor="Navigate">Experiences</a>
+      <a href="#chapter-3" class="hover-target" data-cursor="Discover">Philosophy</a>
+      <a href="#chapter-5" class="hover-target" data-cursor="View">Destinations</a>
+    </div>
+    <a href="#footer-cta" class="nav-cta hover-target" data-cursor="Reserve">Reserve Now</a>
+    <button id="nav-toggle" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- Mobile drawer -->
+  <div id="nav-drawer" role="dialog" aria-label="Navigation menu">
+    <button class="drawer-close" id="drawer-close">✕ Close</button>
+    <a href="#chapter-2" class="drawer-link">Experiences</a>
+    <a href="#chapter-3" class="drawer-link">Philosophy</a>
+    <a href="#chapter-5" class="drawer-link">Destinations</a>
+    <a href="#footer-cta" class="drawer-link" style="color:var(--gold);font-size:clamp(20px,5vw,28px);font-family:var(--font-mono);letter-spacing:0.2em;">Reserve Now</a>
+  </div>
+
+  <!-- ─── HERO ────────────────────────────────────────── -->
+  <section id="hero-pin" aria-label="Hero">
+    <div id="hero-sticky">
+
+      <!-- Video -->
+      <div id="hero-video-wrap" data-cursor-zone="video">
+        <video
+          id="hero-video"
+          src="beachHero.mp4"
+          muted
+          playsinline
+          preload="auto"
+          aria-hidden="true"
+        ></video>
+      </div>
+
+      <!-- Vignette + Spotlight -->
+      <div id="hero-vignette" aria-hidden="true"></div>
+      <div id="hero-spotlight" aria-hidden="true"></div>
+
+      <!-- Scan line -->
+      <div id="hero-scan" aria-hidden="true"></div>
+
+      <!-- Corner decorators -->
+      <div class="corner corner-tl" aria-hidden="true"></div>
+      <div class="corner corner-tr" aria-hidden="true"></div>
+      <div class="corner corner-bl" aria-hidden="true"></div>
+      <div class="corner corner-br" aria-hidden="true"></div>
+
+      <!-- Floating data tags -->
+      <div class="data-tag" id="tag-left" aria-hidden="true">
+        <span class="dt-label">Altitude</span>
+        <span class="dt-value">0<span class="dt-unit">m</span></span>
+        <span class="dt-label">Sea Level</span>
+      </div>
+      <div class="data-tag" id="tag-right" aria-hidden="true">
+        <span class="dt-label">Wind</span>
+        <span class="dt-value">12<span class="dt-unit">kn</span></span>
+        <span class="dt-label">SSW Offshore</span>
+      </div>
+
+      <!-- Floating SVG beach icons -->
+      <div class="hero-icon" id="hero-icon-shell" aria-hidden="true">
+        <svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M26 4C26 4 10 14 10 28C10 36.837 17.163 44 26 44C34.837 44 42 36.837 42 28C42 14 26 4 26 4Z" stroke="rgba(201,168,76,0.55)" stroke-width="1" fill="none"/>
+          <path d="M26 4C26 4 26 20 14 30" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+          <path d="M26 4C26 4 26 20 38 30" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+          <path d="M12 22C18 22 26 26 26 26C26 26 34 22 40 22" stroke="rgba(201,168,76,0.25)" stroke-width="1"/>
+          <circle cx="26" cy="28" r="2" fill="rgba(201,168,76,0.5)"/>
+          <path d="M20 44 L32 44" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+          <path d="M18 47 L34 47" stroke="rgba(201,168,76,0.2)" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="hero-icon" id="hero-icon-wave" aria-hidden="true">
+        <svg width="72" height="36" viewBox="0 0 72 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2 18 C8 8 16 8 22 18 C28 28 36 28 42 18 C48 8 56 8 62 18 C68 28 72 24 72 18" stroke="rgba(245,240,232,0.4)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          <path d="M2 26 C8 16 16 16 22 26 C28 36 36 36 42 26 C48 16 56 16 62 26 C68 36 72 32 72 26" stroke="rgba(245,240,232,0.2)" stroke-width="1" fill="none" stroke-linecap="round"/>
+          <path d="M2 10 C8 2 14 2 20 10 C26 18 34 18 40 10 C46 2 54 2 60 10 C66 18 70 14 72 10" stroke="rgba(201,168,76,0.2)" stroke-width="0.8" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="hero-icon" id="hero-icon-compass" aria-hidden="true">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="21" stroke="rgba(201,168,76,0.35)" stroke-width="1"/>
+          <circle cx="24" cy="24" r="15" stroke="rgba(201,168,76,0.2)" stroke-width="0.5" stroke-dasharray="2 4"/>
+          <line x1="24" y1="3" x2="24" y2="8" stroke="rgba(245,240,232,0.5)" stroke-width="1"/>
+          <line x1="24" y1="40" x2="24" y2="45" stroke="rgba(245,240,232,0.5)" stroke-width="1"/>
+          <line x1="3" y1="24" x2="8" y2="24" stroke="rgba(245,240,232,0.5)" stroke-width="1"/>
+          <line x1="40" y1="24" x2="45" y2="24" stroke="rgba(245,240,232,0.5)" stroke-width="1"/>
+          <polygon points="24,10 21,24 24,22 27,24" fill="rgba(245,240,232,0.7)"/>
+          <polygon points="24,38 21,24 24,26 27,24" fill="rgba(201,168,76,0.6)"/>
+          <circle cx="24" cy="24" r="2" fill="rgba(201,168,76,0.8)"/>
+          <text x="24" y="7" text-anchor="middle" font-family="DM Mono,monospace" font-size="4" fill="rgba(245,240,232,0.5)" letter-spacing="0">N</text>
+          <text x="24" y="46" text-anchor="middle" font-family="DM Mono,monospace" font-size="4" fill="rgba(245,240,232,0.3)">S</text>
+          <text x="44" y="25" text-anchor="middle" font-family="DM Mono,monospace" font-size="4" fill="rgba(245,240,232,0.3)">E</text>
+          <text x="5" y="25" text-anchor="middle" font-family="DM Mono,monospace" font-size="4" fill="rgba(245,240,232,0.3)">W</text>
+        </svg>
+      </div>
+
+      <!-- Phase label -->
+      <div id="phase-label" aria-hidden="true">Dawn — Act I</div>
+
+      <!-- Main content -->
+      <div id="hero-content">
+        <div class="hero-eyebrow">Exclusive Coastal Collection</div>
+        <h1 class="hero-title chroma-target">
+          <span class="line"><span class="line-inner">Where the</span></span>
+          <span class="line"><span class="line-inner"><em>Horizon</em></span></span>
+          <span class="line"><span class="line-inner">Breathes</span></span>
+        </h1>
+        <p class="hero-sub">A curated sanctuary at the confluence of sky and sea — crafted for those who demand nothing less than transcendence.</p>
+      </div>
+
+      <!-- Scroll hint -->
+      <div id="scroll-hint" aria-label="Scroll to explore">
+        <span>Scroll to explore</span>
+        <div class="scroll-line"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── CHAPTER 2 ─ EDITORIAL ────────────────────── -->
+  <section id="chapter-2" aria-label="Experiences">
+
+    <!-- Top split: image | text -->
+    <div class="ch2-split">
+
+      <!-- Left: editorial photo -->
+      <div class="ch2-img-col">
+        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=85" alt="Aerial beach view" loading="lazy" />
+        <div class="ch2-img-overlay"></div>
+        <div class="ch2-img-caption">Coastline · 06°N 73°E · Maldives</div>
+      </div>
+
+      <!-- Right: text -->
+      <div class="ch2-text-col">
+        <div class="chapter-label">The Philosophy</div>
+
+        <h2 class="chapter-heading">
+          <span class="ch2-word"><span class="ch2-word-inner">Beyond</span></span>
+          <span class="ch2-word"><span class="ch2-word-inner">the</span></span>
+          <span class="ch2-word"><span class="ch2-word-inner"><em>ordinary</em></span></span>
+          <br>
+          <span class="ch2-word"><span class="ch2-word-inner">horizon</span></span>
+        </h2>
+
+        <div class="chapter-body">
+          <span class="ch2-line"><span class="ch2-line-inner">Every wave carries a story of ten thousand miles.</span></span>
+          <span class="ch2-line"><span class="ch2-line-inner">We've built a retreat that doesn't compete with</span></span>
+          <span class="ch2-line"><span class="ch2-line-inner">nature — it dissolves into it. Expect architecture</span></span>
+          <span class="ch2-line"><span class="ch2-line-inner">that listens, light that heals, silence you can taste.</span></span>
+        </div>
+
+        <a href="#" class="glass-btn hover-target" data-cursor="Discover">
+          Discover the Experience
+          <span class="btn-arrow"></span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bottom: three image experience strips -->
+    <div class="ch2-strips">
+
+      <div class="ch2-strip hover-target" data-cursor="View">
+        <div class="ch2-strip-img" style="background-image:url('https://images.unsplash.com/photo-1473177027534-53d906e9abcf?w=800&q=80')"></div>
+        <div class="ch2-strip-overlay"></div>
+        <div class="ch2-strip-content">
+          <div class="ch2-strip-num">01 — Dawn</div>
+          <div class="ch2-strip-title">First Light<br>Sessions</div>
+          <div class="ch2-strip-desc">Guided meditation at the water's edge as the sun crests the horizon. A ritual of awakening.</div>
+        </div>
+      </div>
+
+      <div class="ch2-strip hover-target" data-cursor="View">
+        <div class="ch2-strip-img" style="background-image:url('https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80')"></div>
+        <div class="ch2-strip-overlay"></div>
+        <div class="ch2-strip-content">
+          <div class="ch2-strip-num">02 — Tide</div>
+          <div class="ch2-strip-title">Tidal Spa<br>Immersion</div>
+          <div class="ch2-strip-desc">Salt-stone hydrotherapy synchronized with the natural tidal rhythm. The ocean as therapist.</div>
+        </div>
+      </div>
+
+      <div class="ch2-strip hover-target" data-cursor="View">
+        <div class="ch2-strip-img" style="background-image:url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80')"></div>
+        <div class="ch2-strip-overlay"></div>
+        <div class="ch2-strip-content">
+          <div class="ch2-strip-num">03 — Dusk</div>
+          <div class="ch2-strip-title">Horizon<br>Dining</div>
+          <div class="ch2-strip-desc">Twelve-course sensory experience suspended above the surf line. Reserve three months ahead.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── CHAPTER 3 ─ MANIFESTO ───────────────────── -->
+  <section id="chapter-3" aria-label="Our philosophy">
+    <canvas id="sand-canvas" aria-hidden="true"></canvas>
+    <div class="manifesto">
+      <blockquote class="manifesto-quote" id="manifesto-quote">
+        <span class="mword"><span class="mword-inner">"The</span></span>
+        <span class="mword"><span class="mword-inner">sea</span></span>
+        <span class="mword"><span class="mword-inner">does</span></span>
+        <span class="mword"><span class="mword-inner">not</span></span>
+        <span class="mword"><span class="mword-inner">reward</span></span>
+        <span class="mword"><span class="mword-inner">those</span></span>
+        <span class="mword"><span class="mword-inner">who</span></span>
+        <span class="mword"><span class="mword-inner">are</span></span>
+        <span class="mword"><span class="mword-inner">too</span></span>
+        <span class="mword"><span class="mword-inner">anxious,</span></span>
+        <span class="mword"><span class="mword-inner">too</span></span>
+        <span class="mword"><span class="mword-inner">greedy,</span></span>
+        <span class="mword"><span class="mword-inner">or</span></span>
+        <span class="mword"><span class="mword-inner">too</span></span>
+        <span class="mword"><span class="mword-inner">impatient.</span></span>
+        <span class="mword"><span class="mword-inner">One</span></span>
+        <span class="mword"><span class="mword-inner">should</span></span>
+        <span class="mword"><span class="mword-inner">lie</span></span>
+        <span class="mword"><span class="mword-inner">empty,</span></span>
+        <span class="mword"><span class="mword-inner">open,</span></span>
+        <span class="mword"><span class="mword-inner"><em>choiceless</em></span></span>
+        <span class="mword"><span class="mword-inner">as</span></span>
+        <span class="mword"><span class="mword-inner">a</span></span>
+        <span class="mword"><span class="mword-inner">beach—waiting</span></span>
+        <span class="mword"><span class="mword-inner">for</span></span>
+        <span class="mword"><span class="mword-inner">a</span></span>
+        <span class="mword"><span class="mword-inner">gift</span></span>
+        <span class="mword"><span class="mword-inner">from</span></span>
+        <span class="mword"><span class="mword-inner">the</span></span>
+        <span class="mword"><span class="mword-inner">sea."</span></span>
+      </blockquote>
+      <div class="manifesto-attr">
+        <span class="mattr-wrap"><span class="mattr-inner">— Anne Morrow Lindbergh · Gift from the Sea</span></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── WAVE DIVIDER ────────────────────────────── -->
+  <div class="wave-divider" aria-hidden="true">
+    <svg viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,40 C180,80 360,0 540,40 C720,80 900,0 1080,40 C1260,80 1380,20 1440,40 L1440,80 L0,80 Z" fill="#061a22"/>
+      <path d="M0,55 C200,20 400,70 600,45 C800,20 1000,65 1200,40 C1320,25 1400,50 1440,45 L1440,80 L0,80 Z" fill="#061a22" opacity="0.5"/>
+    </svg>
+  </div>
+
+  <!-- ─── AMENITIES ICON ROW ───────────────────────── -->
+  <section id="chapter-amenities" aria-label="Amenities">
+    <div class="amenities-inner">
+      <div class="amenity-cell hover-target" data-cursor="More">
+        <div class="amenity-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Umbrella / beach -->
+            <path d="M18 8 C10 8 4 14 4 18 L32 18 C32 14 26 8 18 8 Z" stroke="currentColor" stroke-width="1.2" fill="none"/>
+            <line x1="18" y1="18" x2="15" y2="30" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="18" y1="8" x2="18" y2="5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            <line x1="4" y1="30" x2="32" y2="30" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>
+          </svg>
+        </div>
+        <div class="amenity-name">Private Beach</div>
+      </div>
+      <div class="amenity-cell hover-target" data-cursor="More">
+        <div class="amenity-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Sailboat -->
+            <path d="M18 6 L18 26" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            <path d="M18 8 L30 22 L18 22 Z" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+            <path d="M18 10 L8 22 L18 22 Z" stroke="currentColor" stroke-width="0.8" fill="none" opacity="0.5" stroke-linejoin="round"/>
+            <path d="M8 27 C10 24 14 25 18 26 C22 27 26 24 28 27" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+            <line x1="6" y1="30" x2="30" y2="30" stroke="currentColor" stroke-width="0.8" opacity="0.35"/>
+          </svg>
+        </div>
+        <div class="amenity-name">Sailing</div>
+      </div>
+      <div class="amenity-cell hover-target" data-cursor="More">
+        <div class="amenity-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Spa / lotus -->
+            <path d="M18 28 C18 28 10 22 10 16 C10 12 14 10 18 14 C22 10 26 12 26 16 C26 22 18 28 18 28 Z" stroke="currentColor" stroke-width="1.2" fill="none"/>
+            <path d="M18 14 C18 14 12 12 10 8 C10 8 16 8 18 14 Z" stroke="currentColor" stroke-width="0.8" fill="none" opacity="0.5"/>
+            <path d="M18 14 C18 14 24 12 26 8 C26 8 20 8 18 14 Z" stroke="currentColor" stroke-width="0.8" fill="none" opacity="0.5"/>
+            <line x1="18" y1="28" x2="18" y2="32" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            <line x1="12" y1="32" x2="24" y2="32" stroke="currentColor" stroke-width="0.8" opacity="0.4"/>
+          </svg>
+        </div>
+        <div class="amenity-name">Spa & Wellness</div>
+      </div>
+      <div class="amenity-cell hover-target" data-cursor="More">
+        <div class="amenity-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Diving mask / snorkel -->
+            <rect x="8" y="14" width="20" height="12" rx="4" stroke="currentColor" stroke-width="1.2" fill="none"/>
+            <circle cx="14" cy="20" r="4" stroke="currentColor" stroke-width="1" fill="none"/>
+            <circle cx="22" cy="20" r="4" stroke="currentColor" stroke-width="1" fill="none"/>
+            <path d="M28 14 L28 10 C28 8 30 8 30 10 L30 20" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="amenity-name">Snorkelling</div>
+      </div>
+      <div class="amenity-cell hover-target" data-cursor="More">
+        <div class="amenity-icon">
+          <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Stars / fine dining -->
+            <path d="M18 6 L20 13 L27 13 L21.5 17.5 L23.5 25 L18 20.5 L12.5 25 L14.5 17.5 L9 13 L16 13 Z" stroke="currentColor" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+            <circle cx="9" cy="27" r="2" stroke="currentColor" stroke-width="0.8" fill="none" opacity="0.45"/>
+            <circle cx="27" cy="27" r="2" stroke="currentColor" stroke-width="0.8" fill="none" opacity="0.45"/>
+            <line x1="18" y1="30" x2="18" y2="32" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+          </svg>
+        </div>
+        <div class="amenity-name">Fine Dining</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CHAPTER 4 ─ TYPOGRAPHIC STATEMENT ───────── -->
+  <section id="chapter-4" aria-label="Our identity">
+
+    <!-- Row 1: CÔTE · LUMINESCENCE -->
+    <div class="ch4-row" id="ch4-r1">
+      <div class="ch4-clip"><div class="ch4-clip-inner"><span class="ch4-word-filled">CÔTE</span></div></div>
+      <div class="ch4-dot"></div>
+      <div class="ch4-clip"><div class="ch4-clip-inner"><span class="ch4-word-outline">Luminescence</span></div></div>
+    </div>
+
+    <!-- Divider with tagline -->
+    <div class="ch4-divider-row" id="ch4-div">
+      <div class="ch4-rule"></div>
+      <div class="ch4-tagline">Where every horizon is a new beginning</div>
+      <div class="ch4-rule"></div>
+    </div>
+
+    <!-- Row 2: TRANQUILITY · SANCTUM -->
+    <div class="ch4-row" id="ch4-r2">
+      <div class="ch4-clip"><div class="ch4-clip-inner"><span class="ch4-word-outline">Tranquility</span></div></div>
+      <div class="ch4-dot"></div>
+      <div class="ch4-clip"><div class="ch4-clip-inner"><span class="ch4-word-filled">SANCTUM</span></div></div>
+    </div>
+
+    <!-- Row 3: smaller — IMMERSION · HORIZON -->
+    <div class="ch4-row" id="ch4-r3" style="margin-top: 16px;">
+      <div class="ch4-clip"><div class="ch4-clip-inner">
+        <span class="ch4-word-filled" style="font-size:clamp(32px,4.5vw,72px); -webkit-text-stroke:0; color:rgba(245,240,232,0.18); letter-spacing:0.3em;">IMMERSION</span>
+      </div></div>
+      <div class="ch4-dot" style="width:4px;height:4px;margin:0 clamp(12px,2vw,28px);"></div>
+      <div class="ch4-clip"><div class="ch4-clip-inner">
+        <span class="ch4-word-outline" style="font-size:clamp(32px,4.5vw,72px); -webkit-text-stroke:1px rgba(201,168,76,0.22); letter-spacing:0.3em;">HORIZON</span>
+      </div></div>
+    </div>
+
+  </section>
+
+  <!-- ─── PHOTO GALLERY ────────────────────────────── -->
+  <section id="chapter-gallery" aria-label="Gallery">
+    <div class="gallery-header">
+      <span class="gallery-label">The Collection</span>
+      <div class="gallery-rule"></div>
+      <span class="gallery-count">08 Frames</span>
+    </div>
+    <div class="gallery-grid">
+      <!-- tall left feature -->
+      <div class="gallery-item hover-target" data-cursor="View">
+        <div class="gallery-img" style="background-image:url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=80')"></div>
+        <div class="gallery-caption">
+          <span class="gallery-caption-text">Infinite edge</span>
+          <span class="gallery-caption-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><line x1="2" y1="8" x2="14" y2="8" stroke="rgba(245,240,232,0.6)" stroke-width="1"/><polyline points="10,4 14,8 10,12" stroke="rgba(245,240,232,0.6)" stroke-width="1" fill="none"/></svg>
+          </span>
+        </div>
+      </div>
+      <!-- top middle -->
+      <div class="gallery-item hover-target" data-cursor="View">
+        <div class="gallery-img" style="background-image:url('https://images.unsplash.com/photo-1519046904884-53103b34b206?w=700&q=80')"></div>
+        <div class="gallery-caption">
+          <span class="gallery-caption-text">Caldera glow</span>
+          <span class="gallery-caption-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><line x1="2" y1="8" x2="14" y2="8" stroke="rgba(245,240,232,0.6)" stroke-width="1"/><polyline points="10,4 14,8 10,12" stroke="rgba(245,240,232,0.6)" stroke-width="1" fill="none"/></svg></span>
+        </div>
+      </div>
+      <!-- top right -->
+      <div class="gallery-item hover-target" data-cursor="View">
+        <div class="gallery-img" style="background-image:url('https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=700&q=80')"></div>
+        <div class="gallery-caption">
+          <span class="gallery-caption-text">Cenote depth</span>
+          <span class="gallery-caption-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><line x1="2" y1="8" x2="14" y2="8" stroke="rgba(245,240,232,0.6)" stroke-width="1"/><polyline points="10,4 14,8 10,12" stroke="rgba(245,240,232,0.6)" stroke-width="1" fill="none"/></svg></span>
+        </div>
+      </div>
+      <!-- wide bottom spanning col 2-3 -->
+      <div class="gallery-item hover-target" data-cursor="View">
+        <div class="gallery-img" style="background-image:url('https://images.unsplash.com/photo-1476673160081-cf065607f449?w=1100&q=80')"></div>
+        <div class="gallery-caption">
+          <span class="gallery-caption-text">Salt & silence</span>
+          <span class="gallery-caption-icon"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><line x1="2" y1="8" x2="14" y2="8" stroke="rgba(245,240,232,0.6)" stroke-width="1"/><polyline points="10,4 14,8 10,12" stroke="rgba(245,240,232,0.6)" stroke-width="1" fill="none"/></svg></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CHAPTER 5 ─ EXPERIENCE GRID ─────────────── -->
+  <section id="chapter-5" aria-label="Destinations">
+    <div class="exp-header">
+      <h2>Our <em>Destinations</em></h2>
+      <span class="exp-count">06 Locations Worldwide</span>
+    </div>
+    <div class="exp-grid">
+      <div class="exp-card hover-target" data-cursor="Explore">
+        <div class="exp-card-bg" style="background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=80')"></div>
+        <div class="exp-card-overlay"></div>
+        <div class="exp-card-content">
+          <div class="exp-card-tag">Flagship · Maldives</div>
+          <div class="exp-card-title">The Atoll Sanctuary</div>
+          <div class="exp-card-reveal">Discover</div>
+        </div>
+      </div>
+      <div class="exp-card hover-target" data-cursor="Explore">
+        <div class="exp-card-bg" style="background-image: url('https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?w=600&q=80')"></div>
+        <div class="exp-card-overlay"></div>
+        <div class="exp-card-content">
+          <div class="exp-card-tag">Amalfi Coast</div>
+          <div class="exp-card-title">Cliffside Refuge</div>
+          <div class="exp-card-reveal">Discover</div>
+        </div>
+      </div>
+      <div class="exp-card hover-target" data-cursor="Explore">
+        <div class="exp-card-bg" style="background-image: url('https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?w=600&q=80')"></div>
+        <div class="exp-card-overlay"></div>
+        <div class="exp-card-content">
+          <div class="exp-card-tag">Tulum</div>
+          <div class="exp-card-title">Cenote Estate</div>
+          <div class="exp-card-reveal">Discover</div>
+        </div>
+      </div>
+      <div class="exp-card hover-target" data-cursor="Explore">
+        <div class="exp-card-bg" style="background-image: url('https://images.unsplash.com/photo-1519046904884-53103b34b206?w=600&q=80')"></div>
+        <div class="exp-card-overlay"></div>
+        <div class="exp-card-content">
+          <div class="exp-card-tag">Santorini</div>
+          <div class="exp-card-title">Caldera Pavilion</div>
+          <div class="exp-card-reveal">Discover</div>
+        </div>
+      </div>
+      <div class="exp-card hover-target" data-cursor="Explore">
+        <div class="exp-card-bg" style="background-image: url('https://images.unsplash.com/photo-1471922694854-ff1b63b20054?w=600&q=80')"></div>
+        <div class="exp-card-overlay"></div>
+        <div class="exp-card-content">
+          <div class="exp-card-tag">Bali</div>
+          <div class="exp-card-title">Temple Shore</div>
+          <div class="exp-card-reveal">Discover</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER CTA ────────────────────────────────── -->
+  <section id="footer-cta" aria-label="Call to action">
+    <div class="cta-ring" aria-hidden="true"></div>
+    <div class="cta-ring" aria-hidden="true"></div>
+    <div class="cta-label">Begin Your Journey</div>
+    <h2 class="cta-title chroma-target">
+      Claim Your<br><em>Horizon</em>
+    </h2>
+    <div class="cta-actions">
+      <a href="#" class="btn-primary hover-target" data-cursor="Reserve">Reserve a Stay</a>
+      <a href="#" class="btn-ghost hover-target" data-cursor="View">View Brochure</a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-logo">CÔTE</div>
+    <div class="footer-copy">© 2024 Côte Estates · All rights reserved · Privacy · Terms</div>
+  </footer>
+
+</div><!-- /#app -->
+
+<script>
+(function () {
+  'use strict';
+
+  /* ─── Wait for GSAP ──────────────────────────── */
+  function waitGSAP(cb) {
+    if (window.gsap && window.ScrollTrigger) { cb(); return; }
+    setTimeout(() => waitGSAP(cb), 60);
+  }
+
+  waitGSAP(init);
+
+  function init() {
+    gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+
+    /* ─── Refs ────────────────────────────────── */
+    const video      = document.getElementById('hero-video');
+    const loader     = document.getElementById('loader');
+    const app        = document.getElementById('app');
+    const loaderBar  = document.getElementById('loader-arc-fill');
+    const loaderPct  = document.getElementById('loader-percent');
+    const loaderWord = document.getElementById('loader-wordmark');
+    const loaderSub  = document.getElementById('loader-sub');
+    const loaderBarW = document.getElementById('loader-bar-wrap');
+    const progressBar= document.getElementById('progress-bar');
+    const phaseLabel = document.getElementById('phase-label');
+
+    /* ─── Progress bar ────────────────────────── */
+    ScrollTrigger.create({
+      trigger: document.body,
+      start: 'top top',
+      end: 'bottom bottom',
+      onUpdate: self => {
+        gsap.set(progressBar, { width: (self.progress * 100) + '%' });
+      }
+    });
+
+    /* ─── Loader sequence ─────────────────────── */
+    const loaderTL = gsap.timeline();
+    loaderTL
+      .to(loaderWord,  { opacity: 1, y: 0, duration: 1.2, ease: 'expo.out' }, 0.2)
+      .to(loaderSub,   { opacity: 1, duration: 0.8, ease: 'power2.out' }, 0.9)
+      .to(loaderBarW,  { opacity: 1, duration: 0.5 }, 1.1)
+      .to(loaderPct,   { opacity: 1, duration: 0.5 }, 1.1);
+
+    // Simulate load progress (also drives real video buffer check)
+    let pct = 0;
+    const loadInterval = setInterval(() => {
+      // Real progress from video if available, else fake it
+      const vidPct = video.duration
+        ? Math.round((video.buffered.length ? video.buffered.end(0) / video.duration : 0) * 100)
+        : 0;
+      pct = Math.max(pct + 1.2, vidPct);
+      if (pct >= 100) pct = 100;
+      // Drive the arc: circumference 175.9, offset goes 175.9→0 as pct goes 0→100
+      if (loaderBar) loaderBar.style.strokeDashoffset = 175.9 - (175.9 * pct / 100);
+      loaderPct.textContent = Math.floor(pct) + '%';
+      // Activate beams once loader appears
+      document.querySelectorAll('.lbeam').forEach(b => b.classList.add('active'));
+      if (pct >= 100) { clearInterval(loadInterval); revealScene(); }
+    }, 30);
+
+    // Bail after 4s regardless
+    setTimeout(() => { pct = 100; }, 4000);
+
+    function revealScene() {
+      gsap.timeline()
+        .to(loaderWord, { filter: 'url(#aberration-flash)', duration: 0.1 })
+        .to(loaderWord, { filter: 'none', duration: 0.1 })
+        .to(loader, { opacity: 0, duration: 0.8, ease: 'power2.inOut', onComplete: () => {
+          loader.style.display = 'none';
+        }})
+        .to(app,  { opacity: 1, duration: 0.01 }, '<0.4')
+        .call(runMasterTimeline);
+    }
+
+    /* ─── Master Intro Timeline ───────────────── */
+    function runMasterTimeline() {
+      // Video is driven by scroll scrub — do NOT call play() here
+
+      const master = gsap.timeline();
+
+      // Corners
+      master.to('.corner', { opacity: 1, duration: 0.8, stagger: 0.1, ease: 'power2.out' }, 0);
+
+      // Scan line
+      master.fromTo('#hero-scan',
+        { opacity: 0, scaleX: 0, y: '-50vh' },
+        { opacity: 1, scaleX: 1, y: '0vh',  duration: 0.6, ease: 'power3.out' },
+        0.2
+      ).to('#hero-scan', { opacity: 0, y: '50vh', duration: 0.6, ease: 'power3.in' }, 0.8);
+
+      // Eyebrow
+      master.to('.hero-eyebrow', { opacity: 1, y: 0, duration: 0.9, ease: 'expo.out' }, 0.6);
+
+      // Title lines stagger
+      master.to('.line-inner', {
+        y: '0%',
+        duration: 1.3,
+        ease: 'expo.out',
+        stagger: 0.12
+      }, 0.75);
+
+      // Sub
+      master.to('.hero-sub', { opacity: 1, y: 0, duration: 1, ease: 'expo.out' }, 1.2);
+
+      // Data tags
+      master.to('#tag-left, #tag-right', { opacity: 1, y: 0, x: 0, duration: 1, stagger: 0.15, ease: 'expo.out' }, 1.1);
+
+      // Phase label
+      master.to('#phase-label', { opacity: 1, duration: 1 }, 1.4);
+
+      // Scroll hint
+      master.to('#scroll-hint', { opacity: 1, duration: 0.8 }, 1.8);
+
+      // Spotlight pulse
+      master.to('#hero-spotlight', { opacity: 1, duration: 2, ease: 'power1.inOut' }, 0.5);
+    }
+
+    /* ─── Video Scrub ─────────────────────────── */
+    let scrubSetup = false;
+
+    function setupVideoScrub() {
+      if (scrubSetup) return;
+      scrubSetup = true;
+
+      // Pause the video — scrubbing drives currentTime manually
+      video.pause();
+
+      const dur = video.duration || 15;
+
+      // Phase label phases
+      const phases = [
+        { pct: 0,    label: 'Dawn — Act I',    color: 'rgba(201,168,76,0.5)' },
+        { pct: 0.3,  label: 'Midday — Act II', color: 'rgba(245,240,232,0.4)' },
+        { pct: 0.65, label: 'Dusk — Act III',  color: 'rgba(201,168,76,0.6)' },
+        { pct: 0.85, label: 'Night — Finale',  color: 'rgba(13,79,92,0.8)' },
+      ];
+
+      ScrollTrigger.create({
+        trigger: '#hero-pin',
+        start: 'top top',
+        end: 'bottom bottom',
+        pin: '#hero-sticky',
+        scrub: 0.4,
+        onUpdate: self => {
+          const p = self.progress;
+
+          // Only seek when video is ready to accept it
+          if (video.readyState >= 2) {
+            const target = p * dur;
+            // Skip tiny seeks to avoid stutter
+            if (Math.abs(video.currentTime - target) > 0.05) {
+              video.currentTime = target;
+            }
+          }
+
+          // Phase labels
+          let phase = phases[0];
+          for (let i = phases.length - 1; i >= 0; i--) {
+            if (p >= phases[i].pct) { phase = phases[i]; break; }
+          }
+          phaseLabel.textContent = phase.label;
+          phaseLabel.style.color = phase.color;
+
+          // Parallax the video slightly on scroll
+          gsap.set('#hero-video', { y: p * 40 + 'px' });
+
+          // Hero content fade out on exit
+          const exitStart = 0.7;
+          if (p > exitStart) {
+            const fade = (p - exitStart) / (1 - exitStart);
+            gsap.set('#hero-content', { opacity: 1 - fade, y: fade * -60 });
+          } else {
+            gsap.set('#hero-content', { opacity: 1, y: 0 });
+          }
+
+          // Scroll hint fade
+          gsap.set('#scroll-hint', { opacity: Math.max(0, 1 - p * 8) });
+
+          // Data tags subtle drift
+          gsap.set('#tag-left',  { x: p * -20 });
+          gsap.set('#tag-right', { x: p * 20 });
+        }
+      });
+    }
+
+    // Set up scrub as soon as metadata is ready
+    if (video.readyState >= 1) {
+      setupVideoScrub();
+    } else {
+      video.addEventListener('loadedmetadata', setupVideoScrub, { once: true });
+    }
+
+    /* ─── Hero Icons reveal ───────────────────── */
+    gsap.to(['#hero-icon-shell','#hero-icon-wave','#hero-icon-compass'], {
+      opacity: 1,
+      duration: 1.2,
+      stagger: 0.2,
+      ease: 'expo.out',
+      delay: 2.2
+    });
+
+    /* ─── Chapter 2 Animations ────────────────── */
+    ScrollTrigger.create({
+      trigger: '#chapter-2',
+      start: 'top 75%',
+      onEnter: () => {
+        const tl = gsap.timeline();
+
+        // Label slides in
+        tl.to('.chapter-label', {
+          opacity: 1, x: 0, duration: 0.8, ease: 'expo.out'
+        }, 0);
+
+        // Heading: each word-inner rises from clip
+        tl.to('.ch2-word-inner', {
+          y: '0%',
+          duration: 1.1,
+          ease: 'expo.out',
+          stagger: 0.07
+        }, 0.15);
+
+        // Body: each line rises
+        tl.to('.ch2-line-inner', {
+          y: '0%',
+          duration: 0.9,
+          ease: 'expo.out',
+          stagger: 0.1
+        }, 0.55);
+
+        // Button fades in
+        tl.to('.glass-btn', {
+          opacity: 1, duration: 0.7, ease: 'expo.out'
+        }, 0.85);
+
+        // Image strips rise in stagger
+        tl.to('.ch2-strip', {
+          opacity: 1, y: 0,
+          duration: 1, ease: 'expo.out',
+          stagger: 0.12
+        }, 0.3);
+      }
+    });
+
+    /* ─── Chapter 3 — Sand + Word Reveal ─────── */
+    ScrollTrigger.create({
+      trigger: '#chapter-3',
+      start: 'top 72%',
+      once: true,
+      onEnter: () => {
+
+        /* ── 1. Sand particle canvas ─────────────── */
+        const canvas  = document.getElementById('sand-canvas');
+        const section = document.getElementById('chapter-3');
+        const ctx     = canvas.getContext('2d');
+
+        function resizeCanvas() {
+          canvas.width  = section.offsetWidth;
+          canvas.height = section.offsetHeight;
+        }
+        resizeCanvas();
+
+        // Spawn particles
+        const PARTICLE_COUNT = 600;
+        const particles = [];
+        const sandColors = [
+          'rgba(200,169,110,',
+          'rgba(222,196,145,',
+          'rgba(180,148, 88,',
+          'rgba(240,220,170,',
+          'rgba(160,128, 72,',
+        ];
+
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+          particles.push({
+            x:    Math.random() * canvas.width,
+            y:    -Math.random() * canvas.height * 0.6,
+            r:    Math.random() * 2.4 + 0.6,
+            vx:   (Math.random() - 0.5) * 0.8,
+            vy:   Math.random() * 2.2 + 1.0,
+            op:   Math.random() * 0.6 + 0.4,
+            col:  sandColors[Math.floor(Math.random() * sandColors.length)],
+            dead: false,
+            // final resting x/r saved when particle settles
+            restX: 0,
+            restR: 0,
+            restCol: '',
+            restOp: 0,
+          });
+        }
+
+        let rafId;
+        let elapsed = 0;
+        const DURATION = 1600; // ms
+        let last = performance.now();
+
+        function drawSand(now) {
+          const dt = now - last;
+          last = now;
+          elapsed += dt;
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // During fall: draw moving particles
+          const fadeAlpha = elapsed > DURATION * 0.65
+            ? 1 - ((elapsed - DURATION * 0.65) / (DURATION * 0.35))
+            : 1;
+
+          particles.forEach(p => {
+            if (p.dead) return;
+            p.x  += p.vx;
+            p.y  += p.vy;
+            p.vy += 0.04;
+            p.vx *= 0.995;
+
+            if (p.y >= canvas.height * 0.96) {
+              // Save rest state when particle hits floor
+              p.dead  = true;
+              p.restX = p.x;
+              p.restR = p.r;
+              p.restCol = p.col;
+              p.restOp  = p.op;
+              return;
+            }
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = p.col + (p.op * fadeAlpha).toFixed(2) + ')';
+            ctx.fill();
+          });
+
+          // Draw settled sand layer — all dead particles pile up at bottom
+          const floorY   = canvas.height;
+          const pileH    = 18; // max pile height in px
+          particles.forEach(p => {
+            if (!p.dead || !p.restX) return;
+            // vertical offset: slight mound shape using a sine curve per x
+            const mound = Math.sin((p.restX / canvas.width) * Math.PI) * 6;
+            const py    = floorY - p.restR - mound - Math.random() * 4;
+            ctx.beginPath();
+            ctx.arc(p.restX, py, p.restR, 0, Math.PI * 2);
+            ctx.fillStyle = p.restCol + p.restOp.toFixed(2) + ')';
+            ctx.fill();
+          });
+
+          if (elapsed < DURATION) {
+            rafId = requestAnimationFrame(drawSand);
+          } else {
+            cancelAnimationFrame(rafId);
+            // Final frame: draw only the settled sand, let canvas persist
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawSettledSand();
+            revealWords();
+          }
+        }
+
+        // Draws the final static sand accumulation at the bottom
+        function drawSettledSand() {
+          const floorY = canvas.height;
+          particles.forEach(p => {
+            if (!p.restX) return;
+            const mound = Math.sin((p.restX / canvas.width) * Math.PI) * 6;
+            const py    = floorY - p.restR - mound - Math.random() * 4;
+            ctx.beginPath();
+            ctx.arc(p.restX, py, p.restR, 0, Math.PI * 2);
+            ctx.fillStyle = p.restCol + p.restOp.toFixed(2) + ')';
+            ctx.fill();
+          });
+        }
+
+        rafId = requestAnimationFrame(drawSand);
+
+        /* ── 2. Word-by-word drop reveal ─────────── */
+        function revealWords() {
+          const words = document.querySelectorAll('.mword-inner');
+          const attr  = document.querySelector('.mattr-inner');
+
+          gsap.to(words, {
+            y: '0%',
+            rotation: 0,
+            opacity: 1,
+            duration: 0.55,
+            ease: 'expo.out',
+            stagger: { each: 0.045, from: 'start' },
+            onComplete: () => {
+              gsap.to(attr, {
+                y: '0%', opacity: 1,
+                duration: 0.7, ease: 'expo.out', delay: 0.1,
+              });
+              // Gently fade the settled sand after text is fully visible
+              gsap.to(canvas, {
+                opacity: 0, duration: 1.8, ease: 'power2.inOut', delay: 1.2,
+                onComplete: () => { canvas.style.display = 'none'; }
+              });
+            }
+          });
+        }
+      }
+    });
+
+    /* ─── Amenities ───────────────────────────── */
+    ScrollTrigger.create({
+      trigger: '#chapter-amenities',
+      start: 'top 80%',
+      onEnter: () => {
+        gsap.to('.amenity-cell', {
+          opacity: 1, y: 0, duration: 0.9,
+          stagger: 0.1, ease: 'expo.out'
+        });
+      }
+    });
+
+    /* ─── Gallery ─────────────────────────────── */
+    ScrollTrigger.create({
+      trigger: '#chapter-gallery',
+      start: 'top 80%',
+      onEnter: () => {
+        gsap.timeline()
+          .to('.gallery-header', { opacity: 1, y: 0, duration: 0.8, ease: 'expo.out' })
+          .to('.gallery-item',   { opacity: 1, y: 0, duration: 1,   stagger: 0.1, ease: 'expo.out' }, 0.2);
+      }
+    });
+
+    /* ─── Chapter 4 Typographic Reveal ───────── */
+    ScrollTrigger.create({
+      trigger: '#chapter-4',
+      start: 'top 80%',
+      onEnter: () => {
+        const tl = gsap.timeline();
+
+        // Row 1 clips rise — staggered left to right
+        tl.to('#ch4-r1 .ch4-clip-inner', {
+          y: '0%', duration: 1.3, ease: 'expo.out', stagger: 0.18
+        }, 0);
+
+        // Dot punches in
+        tl.to('#ch4-r1 .ch4-dot', {
+          opacity: 0.6, scale: 1, duration: 0.5, ease: 'back.out(3)'
+        }, 0.4);
+
+        // Divider rules draw outward
+        tl.fromTo('#ch4-div .ch4-rule',
+          { scaleX: 0, transformOrigin: 'center' },
+          { scaleX: 1, duration: 0.9, ease: 'expo.out', stagger: 0.12 },
+          0.5
+        );
+        // Tagline fades letter by letter via opacity
+        tl.to('#ch4-div .ch4-tagline', {
+          opacity: 1, duration: 0.8, ease: 'power2.out'
+        }, 0.7);
+
+        // Row 2 clips rise
+        tl.to('#ch4-r2 .ch4-clip-inner', {
+          y: '0%', duration: 1.3, ease: 'expo.out', stagger: 0.18
+        }, 0.3);
+        tl.to('#ch4-r2 .ch4-dot', {
+          opacity: 0.6, scale: 1, duration: 0.5, ease: 'back.out(3)'
+        }, 0.7);
+
+        // Row 3 ghost words fade+rise
+        tl.to('#ch4-r3 .ch4-clip-inner', {
+          y: '0%', duration: 1.1, ease: 'expo.out', stagger: 0.15
+        }, 0.55);
+        tl.to('#ch4-r3 .ch4-dot', {
+          opacity: 0.35, duration: 0.4
+        }, 0.85);
+      }
+    });
+
+    // Continuous horizontal drift — plays only while chapter 4 is in viewport
+    const ch4Tweens = [
+      gsap.fromTo('#ch4-r1',  { x:  0 }, { x:  120, duration: 7.5, ease: 'none', repeat: -1, yoyo: true, paused: true }),
+      gsap.fromTo('#ch4-div', { x:  0 }, { x: -100, duration: 9,   ease: 'none', repeat: -1, yoyo: true, paused: true }),
+      gsap.fromTo('#ch4-r2',  { x:  0 }, { x:  100, duration: 8.5, ease: 'none', repeat: -1, yoyo: true, paused: true }),
+      gsap.fromTo('#ch4-r3',  { x:  0 }, { x: -120, duration: 6.5, ease: 'none', repeat: -1, yoyo: true, paused: true }),
+    ];
+    // Stagger start positions so rows aren't in sync
+    ch4Tweens[1].progress(0.3);
+    ch4Tweens[2].progress(0.5);
+    ch4Tweens[3].progress(0.7);
+
+    const ch4Observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        ch4Tweens.forEach(t => entry.isIntersecting ? t.play() : t.pause());
+      });
+    }, { threshold: 0.1 });
+    ch4Observer.observe(document.getElementById('chapter-4'));
+
+    /* ─── Chapter 5 Cards ─────────────────────── */
+    ScrollTrigger.create({
+      trigger: '#chapter-5',
+      start: 'top 80%',
+      onEnter: () => {
+        gsap.timeline()
+          .to('.exp-header', { opacity: 1, y: 0, duration: 0.9, ease: 'expo.out' })
+          .to('.exp-card',   { opacity: 1, scale: 1, duration: 1, stagger: 0.1, ease: 'expo.out' }, 0.2);
+      }
+    });
+
+    /* ─── Footer CTA ─────────────────────────── */
+    ScrollTrigger.create({
+      trigger: '#footer-cta',
+      start: 'top 80%',
+      onEnter: () => {
+        gsap.timeline()
+          .to('.cta-label',   { opacity: 1, y: 0, duration: 0.8, ease: 'expo.out' })
+          .to('.cta-title',   { opacity: 1, y: 0, duration: 1.1, ease: 'expo.out' }, 0.2)
+          .to('.cta-actions', { opacity: 1, y: 0, duration: 0.9, ease: 'expo.out' }, 0.5);
+      }
+    });
+
+    /* ─── Nav smooth scroll ───────────────────── */
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) gsap.to(window, { duration: 1.4, scrollTo: target, ease: 'expo.inOut' });
+      });
+    });
+
+    /* ─── Nav background on scroll ───────────── */
+    ScrollTrigger.create({
+      start: '80px top',
+      onUpdate: self => {
+        const nav = document.querySelector('nav');
+        if (self.direction === 1 && self.scroll() > 80) {
+          nav.style.background = 'linear-gradient(to bottom, rgba(2,13,16,0.92) 0%, rgba(2,13,16,0.0) 100%)';
+        }
+      }
+    });
+
+    /* ─── Resize handling ─────────────────────── */
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => ScrollTrigger.refresh(), 200);
+    });
+
+    /* ─── Mobile hamburger menu ───────────────── */
+    const navToggle  = document.getElementById('nav-toggle');
+    const navDrawer  = document.getElementById('nav-drawer');
+    const drawerClose= document.getElementById('drawer-close');
+
+    function openDrawer() {
+      navDrawer.classList.add('open');
+      navToggle.setAttribute('aria-expanded', 'true');
+      // Morph bars into X
+      const bars = navToggle.querySelectorAll('span');
+      gsap.to(bars[0], { rotation: 45,  y: 6,  width: 22, duration: 0.35, ease: 'power2.inOut' });
+      gsap.to(bars[1], { opacity: 0,             duration: 0.2 });
+      gsap.to(bars[2], { rotation: -45, y: -6, width: 22, duration: 0.35, ease: 'power2.inOut' });
+      // Stagger drawer links in
+      gsap.fromTo('.drawer-link',
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.6, stagger: 0.08, ease: 'expo.out', delay: 0.15 }
+      );
+    }
+    function closeDrawer() {
+      navDrawer.classList.remove('open');
+      navToggle.setAttribute('aria-expanded', 'false');
+      const bars = navToggle.querySelectorAll('span');
+      gsap.to(bars[0], { rotation: 0, y: 0, width: 24, duration: 0.35, ease: 'power2.inOut' });
+      gsap.to(bars[1], { opacity: 1,              duration: 0.2, delay: 0.1 });
+      gsap.to(bars[2], { rotation: 0, y: 0, width: 20, duration: 0.35, ease: 'power2.inOut' });
+    }
+
+    navToggle.addEventListener('click', () => {
+      navDrawer.classList.contains('open') ? closeDrawer() : openDrawer();
+    });
+    drawerClose.addEventListener('click', closeDrawer);
+    document.querySelectorAll('.drawer-link').forEach(a => {
+      a.addEventListener('click', () => {
+        closeDrawer();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) gsap.to(window, { duration: 1.4, scrollTo: target, ease: 'expo.inOut' });
+      });
+    });
+
+  } // end init
+})();
+</script>
+</body>
+</html>
